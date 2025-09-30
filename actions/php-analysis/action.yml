@@ -1,0 +1,34 @@
+name: PHP Analysis
+description: Run PHPStan static analysis
+author: Candra Sudirman
+
+inputs:
+  php-version:
+    description: PHP version to use
+    required: false
+    default: '8.2'
+    type: string
+  extensions:
+    description: PHP extensions to install (comma-separated)
+    required: false
+    default: ''
+    type: string
+  config:
+    description: Path to PHPStan configuration file
+    required: false
+    default: 'phpstan.neon'
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        tools: phpstan
+        php-version: ${{ inputs.php-version }}
+        extensions: ${{ inputs.extensions }}
+
+    - name: Run Static Analysis
+      run: phpstan analyse --no-progress --configuration="${{ inputs.config }}"
+      shell: bash

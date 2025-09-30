@@ -1,0 +1,56 @@
+name: Create Release
+description: Create a new release on GitHub
+author: Candra Sudirman
+
+inputs:
+  token:
+    description: GitHub token with permissions to create a release
+    required: true
+    type: string
+  version:
+    description: Version number for the release (e.g., v1.0.0)
+    required: true
+    type: string
+
+outputs:
+  version:
+    value: ${{ steps.set-version.outputs.version }}
+    description: The version number for the release
+  notes:
+    value: ${{ steps.cleaned-notes.outputs.notes }}
+    description: The cleaned-up release notes
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set version
+      id: set-version
+      run: ${{ github.action_path }}/scripts/set-version.sh
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+    
+    - name: Generate release notes
+      id: generated-notes
+      uses: RedCrafter07/release-notes-action@main
+      with:
+        tag-name: v${{ steps.set-version.outputs.version }}
+        token: ${{ inputs.token }}
+        branch: ${{ github.ref_name }}
+    
+    - name: Cleanup release notes
+      id: cleaned-notes
+      run: ${{ github.action_path }}/scripts/cleanup-notes.sh
+      shell: bash
+      env:
+        RELEASE_NOTES: ${{ steps.generated-notes.outputs.release-notes }}
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.set-version.outputs.version }}
+        name: v${{ steps.set-version.outputs.version }}
+        body: ${{ steps.cleaned-notes.outputs.notes }}
+        target_commitish: ${{ github.ref_name }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}

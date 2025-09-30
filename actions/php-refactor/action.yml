@@ -1,0 +1,50 @@
+name: PHP Refactor
+description: Run Rector to refactor PHP code
+author: Candra Sudirman
+
+inputs:
+  php-version:
+    description: PHP version to use
+    required: false
+    default: '8.2'
+    type: string
+  
+  mode:
+    description: Action for checking or applying refactoring
+    required: false
+    default: 'apply'
+    type: choice
+    options:
+      - check
+      - apply
+  
+  message:
+    description: Commit message for the changes made by Rector
+    required: false
+    default: Apply PHP refactoring
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        tools: composer:v2, rector
+        php-version: ${{ inputs.php-version }}
+    
+    - name: Run Rector to check for refactoring issues
+      if: ${{ inputs.mode == 'check' }}
+      run: rector --dry-run
+      shell: bash
+    
+    - name: Run Rector to apply refactoring
+      if: ${{ inputs.mode == 'apply' }}
+      run: rector
+      shell: bash
+    
+    - name: Commit changes
+      if: ${{ inputs.mode == 'apply' }}
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: ${{ inputs.message }}

@@ -1,0 +1,76 @@
+name: Publish Workflows
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish Workflows ${{ inputs.version }}
+
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      notes: ${{ steps.release.outputs.notes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      
+      - name: Create Release
+        id: release
+        uses: flockyn/workflows/actions/create-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ inputs.version }}
+      
+  update-main-version:
+    needs: publish
+    runs-on: ubuntu-latest
+    name: Update main version ${{ needs.publish.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+        
+      - name: Update version
+        run: |
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          target="v${{ needs.publish.outputs.version }}"
+          major="${target%%.*}"
+
+          echo "Updating tag $major to point to $target"
+
+          git tag -f "$major" "$target"
+          git push origin "$major" --force
+  
+  update-changelog:
+    needs: publish
+    runs-on: ubuntu-latest
+    name: Update Changelog ${{ needs.publish.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+        
+      - name: Update Changelog
+        uses: flockyn/workflows/actions/update-changelog@v1
+        with:
+          version: v${{ needs.publish.outputs.version }}
+          notes: ${{ needs.publish.outputs.notes }}
+          changelog-file: CHANGELOG.md
+          branch: ${{ github.ref_name }}

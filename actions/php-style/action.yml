@@ -1,0 +1,51 @@
+name: PHP Style Code
+description: Run PHP CS Fixer to ensure consistent coding style
+author: Candra Sudirman
+
+inputs:
+  php-version:
+    description: PHP version to use
+    required: false
+    default: '8.2'
+    type: string
+  
+  message:
+    description: Commit message for the changes made by PHP CS Fixer
+    required: false
+    default: Fix code styling
+    type: string
+  
+  mode:
+    description: Mode to run PHP CS Fixer
+    required: false
+    default: fix
+    type: choice
+    options:
+      - fix
+      - test
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        tools: composer:v2, laravel/pint
+        php-version: ${{ inputs.php-version }}
+        extensions: json, dom, curl, libxml, mbstring
+    
+    - name: Run PHP Style Fixer
+      if: ${{ inputs.mode == 'fix' }}
+      run: pint
+      shell: bash
+    
+    - name: Run PHP Style Fixer in test mode
+      if: ${{ inputs.mode == 'test' }}
+      run: pint --test
+      shell: bash
+    
+    - name: Commit changes
+      if: ${{ inputs.mode == 'fix' }}
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: ${{ inputs.message }}

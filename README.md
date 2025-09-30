@@ -5,6 +5,7 @@ A collection of reusable **GitHub Actions composite workflows** for [Flockyn](ht
 ## Available Actions
 
 - [`create-release`](./actions/create-release) – Create GitHub releases with cleaned notes.
+- [`php-style`](./actions/php-style) – Run PHP CS Fixer to ensure consistent coding style.
 - [`php-tests`](./actions/php-tests) – Run unit test for PHP projects.
 - [`update-changelog`](./actions/update-changelog) – Update `CHANGELOG.md` during releases.
 

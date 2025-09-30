@@ -1,0 +1,55 @@
+name: PHP Tests
+description: Run unit test for PHP projects
+author: Candra Sudirman
+
+inputs:
+  php-version:
+    description: PHP version to use
+    required: false
+    default: '8.2'
+    type: string
+  extensions:
+    description: PHP extensions to install (comma-separated)
+    required: false
+    default: ''
+    type: string
+  coverage:
+    description: Code coverage driver (none, xdebug, or pcov)
+    required: false
+    default: ''
+    type: string
+  composer-cmd:
+    description: Composer command to install dependencies (install, update) with flags
+    required: false
+    default: install
+    type: choice
+    options:
+      - install
+      - update
+  execute-cmd:
+    description: Command to run tests
+    required: false
+    default: vendor/bin/phpunit
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: ${{ inputs.extensions }}
+        coverage: ${{ inputs.coverage }}
+    
+    - name: Validate composer.json and composer.lock
+      run: composer validate
+      shell: bash
+    
+    - name: Install Dependencies
+      run: composer ${{ inputs.composer-cmd }} --prefer-dist --no-progress --no-interaction
+      shell: bash
+
+    - name: Execute Tests
+      run: ${{ inputs.execute-cmd }}
+      shell: bash

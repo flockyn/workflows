@@ -6,6 +6,7 @@ Composite to run PHPStan analysis for PHP Projects.
 
 - `php-version`: PHP version to use (default: `8.2`)
 - `extensions`: PHP extensions to install (comma-separated)
+- `composer-cmd`: Composer command to install dependencies (`install` or `update`, default: `install`) with flags
 - `config`: Path to PHPStan configuration file (default: `phpstan.neon`)
 
 ## Usage

@@ -13,6 +13,14 @@ inputs:
     required: false
     default: ''
     type: string
+  composer-cmd:
+    description: Composer command to install dependencies (install, update) with flags
+    required: false
+    default: install
+    type: choice
+    options:
+      - install
+      - update
   config:
     description: Path to PHPStan configuration file
     required: false
@@ -28,6 +36,14 @@ runs:
         tools: phpstan
         php-version: ${{ inputs.php-version }}
         extensions: ${{ inputs.extensions }}
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate
+      shell: bash
+
+    - name: Install Dependencies
+      run: composer ${{ inputs.composer-cmd }} --prefer-dist --no-progress --no-interaction
+      shell: bash
 
     - name: Run Static Analysis
       run: phpstan analyse --no-progress --configuration="${{ inputs.config }}"
